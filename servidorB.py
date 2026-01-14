@@ -1,144 +1,165 @@
 """
-Servidor MCP para Avaliação de Modernidade Tecnológica
+Servidor MCP para Funções Matemáticas de Avaliação de Modernidade
 
-Este servidor oferece ferramentas objetivas para mensurar o grau de modernidade de artefatos tecnológicos,
-integrando análises de agentes especialistas LLM com uma base de conhecimento estática.
-
-## Metodologia de Avaliação
-
-### Dimensões de Modernidade (com pesos):
-1. **Suporte e Ciclo de Vida** (35%): Status oficial de suporte, versões LTS, EoL
-2. **Atualidade Relativa** (20%): Gap entre versão utilizada e última disponível
-3. **Práticas Modernas** (20%): CI/CD, containers, segurança, ecossistema ativo
-4. **Risco de Legado** (15%): Tecnologias obsoletas, arquiteturas monolíticas rígidas
-5. **Cloud & Escalabilidade** (10%): Capacidade cloud-native, scaling horizontal
-
-### Faixas de Classificação:
-- **85-100**: Moderno (tecnologias atuais, práticas avançadas)
-- **70-84**: Em Evolução (bom estado, melhorias pontuais)
-- **50-69**: Moderado / Alvo de Modernização (necessita atenção)
-- **30-49**: Legado Crítico (modernização urgente)
-- **0-29**: Alto Risco Tecnológico (substituição necessária)
-
-## Integração com Agentes LLM
-
-O servidor recebe análises detalhadas dos agentes especialistas através da tool `receber_analise_agente()`,
-que extrai insights qualitativos e os converte em scores quantitativos, combinando com a base estática
-(70% peso agente, 30% base estática).
-
-## Formato de Saída
-
-### Estrutura do Relatório Completo:
-```json
-{
-    "sucesso": true,
-    "indice_global": 73.4,
-    "classificacao_global": "Em Evolução", 
-    "total_artefatos": 12,
-    "estatisticas_por_classificacao": {"Moderno": 4, "Legado Crítico": 3, ...},
-    "artefatos_detalhados": [
-        {
-            "nome_original": "Java 8",
-            "base": "Java", 
-            "versao": "8",
-            "categoria": "Linguagem de Programação",
-            "dimensoes": {
-                "suporte_ciclo_vida": 40,
-                "atualidade_relativa": 30, 
-                "praticas_modernas": 70,
-                "risco_legado": 40,
-                "cloud_scalability": 60
-            },
-            "indice": 45.3,
-            "classificacao": "Legado Crítico",
-            "sugestoes": ["Migrar para Java 17 LTS", ...],
-            "fonte_analise": "Agente Especialista + Base Estática"
-        }
-    ],
-    "top_5_prioridades": [...],
-    "analises_agentes_incorporadas": [...],
-}
-```
+Este servidor oferece apenas ferramentas matemáticas para cálculos de modernidade tecnológica.
 """
 
 from fastmcp import FastMCP
 from typing import List, Dict, Any
-import re
 
-servidor_mcp_mathfunctions = FastMCP(name="Servidor de Modernidade e Funções Matemáticas",
+servidor_mcp_mathfunctions = FastMCP(
+    name="Servidor de Funções Matemáticas",
     instructions="""
-        Servidor com ferramentas de cálculo e avaliação de modernidade tecnológica TOTALMENTE INTEGRADO aos agentes LLM.
-        
-        🚨 IMPORTANTE: A base de conhecimento inicia VAZIA e é populada 100% pelos agentes!
-        
-        FLUXO OBRIGATÓRIO:
-        1. inicializar_base_vazia() → Preparar estrutura
-        2. Agentes do teste.py categorizam artefatos → tabela markdown  
-        3. Agentes especialistas analisam cada categoria → receber_analise_agente()
-        4. Agentes populam a base → atualizar_base_conhecimento() [ESSENCIAL]
-        5. Gerar relatório final → gerar_relatorio_modernidade_completo()
-        
-        🎯 SEM AGENTES = SEM AVALIAÇÃO: O sistema depende 90% das análises dos agentes.
+        Servidor especializado em cálculos matemáticos para avaliação de modernidade tecnológica.
         
         Ferramentas disponíveis:
-        - calcular_media(): função matemática auxiliar
-        - calcular_soma(): função matemática auxiliar
+        - calcular_media(): calcula média de números
+        - calcular_soma(): calcula soma de números  
+        - calcular_pontuacao_artefato(): calcula pontuação total baseada nos 4 critérios
+        - calcular_media_categoria(): calcula média de uma categoria de artefatos
+        - validar_pontuacao(): valida se uma nota está no range correto
+        - calcular_percentual(): calcula percentual de uma pontuação
     """,
 )
 
 
-###############################
-# Tool: calcular_media (existente)
-###############################
 @servidor_mcp_mathfunctions.tool()
-async def calcular_media(numeros: List[int | float | str]) -> Dict[str, Any]:
-    """Calcula a média de uma lista de números com tratamento robusto de dados."""
+async def calcular_media(numeros: List[float]) -> Dict[str, Any]:
+    """Calcula a média de uma lista de números."""
     if not numeros:
-        return {"sucesso": False, "erro": "Lista vazia fornecida", "media": None}
-    numeros_validos: List[float] = []
-    valores_ignorados: List[Dict[str, Any]] = []
-    for i, num in enumerate(numeros):
-        try:
-            if isinstance(num, str):
-                num_limpo = num.strip().replace(',', '.')
-                valor_convertido = float(num_limpo)
-            else:
-                valor_convertido = float(num)
-            numeros_validos.append(valor_convertido)
-        except (ValueError, TypeError):
-            valores_ignorados.append({"posicao": i, "valor": num})
-    if not numeros_validos:
-        return {"sucesso": False, "erro": "Nenhum valor numérico válido encontrado", "media": None, "valores_ignorados": valores_ignorados}
-    media = sum(numeros_validos) / len(numeros_validos)
-    return {"sucesso": True, "media": round(media, 1), "total_valores": len(numeros_validos), "valores_ignorados": valores_ignorados, "valores_processados": numeros_validos}
+        return {"sucesso": False, "erro": "Lista vazia", "media": 0}
+    
+    media = sum(numeros) / len(numeros)
+    return {
+        "sucesso": True,
+        "media": round(media, 2),
+        "total_valores": len(numeros)
+    }
 
-###############################
-# Tool: calcular_soma (existente)
-###############################
+
 @servidor_mcp_mathfunctions.tool()
-async def calcular_soma(numeros: List[int | float | str]) -> Dict[str, Any]:
-    """Calcula a soma de uma lista de números com tratamento robusto de dados."""
+async def calcular_soma(numeros: List[float]) -> Dict[str, Any]:
+    """Calcula a soma de uma lista de números."""
     if not numeros:
-        return {"sucesso": False, "erro": "Lista vazia fornecida", "media": None}
-    numeros_validos: List[float] = []
-    valores_ignorados: List[Dict[str, Any]] = []
-    for i, num in enumerate(numeros):
-        try:
-            if isinstance(num, str):
-                num_limpo = num.strip().replace(',', '.')
-                valor_convertido = float(num_limpo)
-            else:
-                valor_convertido = float(num)
-            numeros_validos.append(valor_convertido)
-        except (ValueError, TypeError):
-            valores_ignorados.append({"posicao": i, "valor": num})
-    if not numeros_validos:
-        return {"sucesso": False, "erro": "Nenhum valor numérico válido encontrado", "media": None, "valores_ignorados": valores_ignorados}
-    soma = sum(numeros_validos) 
-    return {"sucesso": True, "soma": soma, "total_valores": len(numeros_validos), "valores_ignorados": valores_ignorados, "valores_processados": numeros_validos}
+        return {"sucesso": False, "erro": "Lista vazia", "soma": 0}
+    
+    soma = sum(numeros)
+    return {
+        "sucesso": True,
+        "soma": round(soma, 2),
+        "total_valores": len(numeros)
+    }
 
 
-###############################
+@servidor_mcp_mathfunctions.tool()
+async def calcular_pontuacao_artefato(
+    nota_versao_lts: float,
+    nota_ecossistema: float,
+    nota_ferramentas_teste: float,
+    nota_modernidade: float
+) -> Dict[str, Any]:
+    """
+    Calcula a pontuação total de um artefato baseado nos 4 critérios.
+    
+    Fórmula: Total = (versao_lts * 0.8) + (ecossistema * 0.1) + (ferramentas_teste * 0.05) + (modernidade * 0.05)
+    """
+    # Validações
+    if not (0 <= nota_versao_lts <= 8.0):
+        return {"sucesso": False, "erro": "nota_versao_lts deve estar entre 0 e 8.0"}
+    if not (0 <= nota_ecossistema <= 1.0):
+        return {"sucesso": False, "erro": "nota_ecossistema deve estar entre 0 e 1.0"}
+    if not (0 <= nota_ferramentas_teste <= 0.5):
+        return {"sucesso": False, "erro": "nota_ferramentas_teste deve estar entre 0 e 0.5"}
+    if not (0 <= nota_modernidade <= 0.5):
+        return {"sucesso": False, "erro": "nota_modernidade deve estar entre 0 e 0.5"}
+    
+    # Cálculo com pesos
+    total = (nota_versao_lts * 0.8) + (nota_ecossistema * 0.1) + (nota_ferramentas_teste * 0.05) + (nota_modernidade * 0.05)
+    percentual = (total / 10.0) * 100
+    
+    return {
+        "sucesso": True,
+        "total": round(total, 2),
+        "percentual": round(percentual, 1),
+        "componentes": {
+            "versao_lts": round(nota_versao_lts * 0.8, 2),
+            "ecossistema": round(nota_ecossistema * 0.1, 2),
+            "ferramentas_teste": round(nota_ferramentas_teste * 0.05, 2),
+            "modernidade": round(nota_modernidade * 0.05, 2)
+        }
+    }
+
+
+@servidor_mcp_mathfunctions.tool()
+async def calcular_media_categoria(pontuacoes: List[float]) -> Dict[str, Any]:
+    """Calcula a média das pontuações de uma categoria."""
+    if not pontuacoes:
+        return {
+            "sucesso": True,
+            "media": 0.0,
+            "total_itens": 0
+        }
+    
+    # Filtrar valores válidos (0-10)
+    pontuacoes_validas = [p for p in pontuacoes if 0 <= p <= 10]
+    
+    if not pontuacoes_validas:
+        return {"sucesso": False, "erro": "Nenhuma pontuação válida (0-10)"}
+    
+    media = sum(pontuacoes_validas) / len(pontuacoes_validas)
+    minima = min(pontuacoes_validas)
+    maxima = max(pontuacoes_validas)
+    
+    return {
+        "sucesso": True,
+        "media": round(media, 2),
+        "total_itens": len(pontuacoes_validas),
+        "minima": round(minima, 2),
+        "maxima": round(maxima, 2),
+        "amplitude": round(maxima - minima, 2)
+    }
+
+
+@servidor_mcp_mathfunctions.tool()
+async def validar_pontuacao(criterio: str, nota: float) -> Dict[str, Any]:
+    """Valida se uma pontuação está dentro do range permitido."""
+    ranges = {
+        "versao_lts": {"min": 0, "max": 8.0},
+        "ecossistema": {"min": 0, "max": 1.0},
+        "ferramentas_teste": {"min": 0, "max": 0.5},
+        "modernidade": {"min": 0, "max": 0.5}
+    }
+    
+    if criterio not in ranges:
+        return {"sucesso": False, "erro": f"Critério inválido: {criterio}"}
+    
+    r = ranges[criterio]
+    valido = r["min"] <= nota <= r["max"]
+    
+    return {
+        "sucesso": True,
+        "valido": valido,
+        "nota": nota,
+        "range_min": r["min"],
+        "range_max": r["max"]
+    }
+
+
+@servidor_mcp_mathfunctions.tool()
+async def calcular_percentual(valor: float, total: float) -> Dict[str, Any]:
+    """Calcula o percentual de um valor em relação ao total."""
+    if total == 0:
+        return {"sucesso": False, "erro": "Total não pode ser zero"}
+    
+    percentual = (valor / total) * 100
+    
+    return {
+        "sucesso": True,
+        "percentual": round(percentual, 2),
+        "valor": valor,
+        "total": total
+    }
+
+
 if __name__ == "__main__":
     servidor_mcp_mathfunctions.run(transport="sse", port=8082)
-

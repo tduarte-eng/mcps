@@ -1,13 +1,26 @@
 from fastmcp import FastMCP
 import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuração da conexão com o banco
+DB_NAME = os.getenv("POSTGRES_DB", "mcpdb")
+DB_USER = os.getenv("POSTGRES_USER", "postgres")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DB_PORT = os.getenv("POSTGRES_PORT", "5432")
+
+if not DB_PASSWORD:
+    raise ValueError("POSTGRES_PASSWORD não definido. Configure o .env antes de iniciar o servidor MCP Postgres.")
+
 conn = psycopg2.connect(
-    dbname="mcpdb",
-    user="postgres",
-    password="3mQ0XXMi{5-G",
-    host="localhost",
-    port="5432"
+    dbname=DB_NAME,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    host=DB_HOST,
+    port=DB_PORT
 )
 
 servidor_mcp_postgres = FastMCP(name="Servidor de Assistente de Consulta ao Banco de Dados PostgreSQL",
